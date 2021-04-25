@@ -17,15 +17,21 @@ stop() {
     curl -X POST "https://management.azure.com$vm/deallocate?api-version=2021-03-01" -H "Authorization: Bearer $access_token" -d ""
 }
 
-idle_timeout=$1
-config_file=$2
+idle_timeout_file=$1
+secret_file=$2
 
+
+[ ! -z $idle_timeout_file ] || fail "Idle timeout file not provided"
+[ -f $idle_timeout_file ] || fail "Idle timeout file does not exists"
+
+[ ! -z $secret_file ] || fail "Secret file not provided"
+[ -f $secret_file ] || fail "Secret file does not exists"
+
+idle_timeout=$(cat $idle_timeout_file)
 [ ! -z $idle_timeout ] || fail "Idle timeout not provided"
+[ $idle_timeout -ge 3 ] || fail 'Idle timeout should be greater than or equal to 3.'
 
-[ ! -z $config_file ] || fail "Config file not provided"
-[ -f $config_file ] || fail "Config file does not exists"
-
-IFS=: read -r vm tenant clientid secret < $config_file
+IFS=: read -r vm tenant clientid secret < $secret_file
 
 i=0
 while true

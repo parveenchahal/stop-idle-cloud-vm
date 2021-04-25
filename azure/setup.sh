@@ -54,17 +54,18 @@ user=$(echo `whoami`)
 
 secrets_dir="/etc/secrets"
 [ -d $secrets_dir ] || mkdir $secrets_dir || fail 'Not able to create dir.'
-
 secret_file="$secrets_dir/azure-vm-auto-stop-secret"
 echo "$VM_ID:$AAD_TENANT:$AAD_CLIENTID:$AAD_SECRET" > $secret_file
 
-secrets_dir="/etc/secrets"
-[ -d $secrets_dir ] || mkdir $secrets_dir || fail 'Not able to create dir.'
+config_dir="/etc/azure-vm-auto-stop"
+[ -d $config_dir ] || mkdir $config_dir || fail 'Not able to create dir.'
+idle_timeout_file="$config_dir/idle-timeout"
+echo "$IDLE_TIMEOUT" > $idle_timeout_file
 
 [ -f "azure-vm-auto-stop.sh" ] || fail "azure-vm-auto-stop.sh file not found"
 
-cp azure-vm-auto-stop.sh /usr/sbin/
-chmod +x "/usr/sbin/azure-vm-auto-stop.sh"
+cp azure-vm-auto-stop.sh /usr/sbin/azure-vm-auto-stop
+chmod +x "/usr/sbin/azure-vm-auto-stop"
 
 sudo tee /etc/systemd/system/azure-vm-auto-stop.service << EOF
 [Unit]
@@ -74,7 +75,7 @@ WantedBy=multi-user.target
 [Service]
 Type=simple
 WorkingDirectory=/usr/sbin
-ExecStart=/bin/sh azure-vm-auto-stop.sh $IDLE_TIMEOUT $secret_file
+ExecStart=/bin/sh azure-vm-auto-stop $idle_timeout_file $secret_file
 Restart=always
 RestartSec=30
 StandardOutput=syslog
