@@ -52,22 +52,29 @@ user=$(echo `whoami`)
 [ ! -z $AAD_SECRET ] || fail 'Secret not provided'
 [ ! -z $IDLE_TIMEOUT ] || fail 'Please provide idle timeout in minutes.'
 
-secrets_dir="/etc/secrets"
-[ -d $secrets_dir ] || mkdir $secrets_dir || fail 'Not able to create dir.'
-secret_file="$secrets_dir/azure-vm-auto-stop-secret"
-echo "$VM_ID:$AAD_TENANT:$AAD_CLIENTID:$AAD_SECRET" > $secret_file
-
 config_dir="/etc/azure-vm-auto-stop"
 [ -d $config_dir ] || mkdir $config_dir || fail 'Not able to create dir.'
 idle_timeout_file="$config_dir/idle-timeout"
 echo "$IDLE_TIMEOUT" > $idle_timeout_file
+
+secret_file="$config_dir/secrets"
+tee $secret_file << EOF
+{
+  "ArmResourceId": "$VM_ID",
+  "AadTenant": "$AAD_TENANT",
+  "AadClientId": "$AAD_CLIENTID",
+  "AadSecret": "$AAD_SECRET"
+}
+EOF
+
+chmod 600 $secret_file
 
 [ -f "azure-vm-auto-stop.sh" ] || fail "azure-vm-auto-stop.sh file not found"
 
 cp azure-vm-auto-stop.sh /usr/sbin/azure-vm-auto-stop
 chmod +x "/usr/sbin/azure-vm-auto-stop"
 
-sudo tee /etc/systemd/system/azure-vm-auto-stop.service << EOF
+tee /etc/systemd/system/azure-vm-auto-stop.service << EOF
 [Unit]
 Description=Service that automatically stop idle azure vm.
 [Install]

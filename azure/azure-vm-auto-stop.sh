@@ -31,7 +31,17 @@ idle_timeout=$(cat $idle_timeout_file)
 [ ! -z $idle_timeout ] || fail "Idle timeout not provided"
 [ $idle_timeout -ge 3 ] || fail 'Idle timeout should be greater than or equal to 3.'
 
-IFS=: read -r vm tenant clientid secret < $secret_file
+x=$(cat $secret_file | jq '.') || fail "Not able to parse secret's json file."
+
+vm=$(cat $secret_file | jq -r '.ArmResourceId')
+tenant=$(cat $secret_file | jq -r '.AadTenant')
+clientid=$(cat $secret_file | jq -r '.AadClientId')
+secret=$(cat $secret_file | jq -r '.AadSecret')
+
+[ $vm != "null" ] || fail "ArmResourceId not found in secret configiration"
+[ $tenant != "null" ] || fail "AadTenant not found in secret configiration"
+[ $clientid != "null" ] || fail "AadClientId not found in secret configiration"
+[ $secret != "null" ] || fail "AadSecret not found in secret configiration"
 
 i=0
 while true
