@@ -46,7 +46,7 @@ secret=$(cat $secret_file | jq -r '.AadSecret')
 i=0
 while true
 do
-    active_ssh=$(ss | grep ssh | wc -l)
+    active_ssh=$(who | wc -l)
     if [ $active_ssh -gt 0 ]
     then
         i=0
