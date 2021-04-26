@@ -52,15 +52,23 @@ do
         i=0
         echo "$active_ssh active ssh connections. Skipping stop vm operation."
         sleep 60
+        continue
+    fi
+    active_vscode=$(ps aux | grep vscode | grep extensionHost | wc -l)
+    if [ $active_vscode -gt 0 ]
+    then
+        i=0
+        echo "$active_vscode active vscode connections. Skipping stop vm operation."
+        sleep 60
+        continue
+    fi
+    if [ $i -ge $idle_timeout ]
+    then
+        stop $vm $tenant $clientid $secret
+        sleep 300
     else
-        if [ $i -ge $idle_timeout ]
-        then
-            stop $vm $tenant $clientid $secret
-            sleep 300
-        else
-            sleep 60
-            i=$((i+1))
-            echo "No ssh connections for last $i minutes."
-        fi
+        sleep 60
+        i=$((i+1))
+        echo "No connections for last $i minutes."
     fi
 done
